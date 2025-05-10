@@ -14,12 +14,11 @@ from sqlalchemy import (
     Text,
     text,
 )
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
-Base = declarative_base()
-metadata = Base.metadata
 
+from driver_score.core.database import Base
+metadata = Base.metadata
 
 class DissolvedRoute(Base):
     __tablename__ = "dissolved_route"
