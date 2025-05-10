@@ -1,0 +1,54 @@
+[project]
+name = "driver-score"
+version = "0.1.0"
+readme = "README.md"
+
+# Cannot use python 3.12 because of conflict with sqlagencode
+requires-python = ">=3.10,<3.11"
+
+[project.scripts]
+# ds = "driver_score.app:main"
+
+[tool.setuptools]
+package-data = { "sample" = ["settings.yaml"] }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.isort]
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+line_length = 120
+
+[tool.mypy]
+strict = true
+exclude = ["venv", "alembic"]
+
+[tool.ruff]
+target-version = "py310"
+exclude = ["alembic"]
+line-length = 120
+
+
+[tool.ruff.lint]
+select = [
+	"E",  # pycodestyle errors
+	"W",  # pycodestyle warnings
+	"F",  # pyflakes
+	"I",  # isort
+	"B",  # flake8-bugbear
+	"C4", # flake8-comprehensions
+	"UP", # pyupgrade
+]
+ignore = [
+	"E501", # line too long, handled by black
+	"B008", # do not perform function calls in argument defaults
+	"W191", # indentation contains tabs
+	"B904", # Allow raising exceptions without from e, for HTTPException
+]
+
+[tool.ruff.lint.pyupgrade]
+# Preserve types, even if a file imports `from __future__ import annotations`.
+keep-runtime-typing = true

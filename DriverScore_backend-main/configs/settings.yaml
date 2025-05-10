@@ -1,0 +1,16 @@
+default:
+  project_name: "Driver Score"
+
+  api_v1_str: /api/v1
+  backend_cors_origins: ["*"]
+  sqlalchemy_database_uri: postgresql+psycopg2://antoine.revel:@localhost:5432/gpu_user
+
+  log_format: "%Y-%m-%d_%H-%M-%S"
+  collected_data_folder_format: "%Y_%m_%d_%H_%M_%S_%f"
+
+  geopandas_engine: fiona
+  buffer_distance: 0.0001
+
+dev:
+
+prod:
