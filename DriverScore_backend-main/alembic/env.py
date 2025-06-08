@@ -15,6 +15,12 @@ from datetime import datetime
 # access to the values within the .ini file in use.
 config = context.config
 
+# Override sqlalchemy.url from environment variable if available
+if os.environ.get('SQLALCHEMY_DATABASE_URI'):
+    config.set_main_option('sqlalchemy.url', os.environ['SQLALCHEMY_DATABASE_URI'])
+elif os.environ.get('SQLALCHEMY_URL'):
+    config.set_main_option('sqlalchemy.url', os.environ['SQLALCHEMY_URL'])
+
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 if config.config_file_name is not None:

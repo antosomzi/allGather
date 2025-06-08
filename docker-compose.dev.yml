@@ -1,0 +1,68 @@
+# Version développement sans Nginx
+services:
+  # PostgreSQL with PostGIS
+  db:
+    image: postgis/postgis:14-3.4
+    container_name: driverscore-postgres
+    environment:
+      POSTGRES_DB: gpu_user
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - driverscore-network
+
+  # Backend FastAPI
+  api:
+    build:
+      context: ./DriverScore_backend-main
+      dockerfile: Dockerfile
+      args:
+        INSTALL_DEV: false
+    container_name: driverscore-api
+    environment:
+      SQLALCHEMY_DATABASE_URI: postgresql+psycopg2://postgres:postgres@db:5432/gpu_user
+      BACKEND_CORS_ORIGINS: '["http://localhost:5173", "http://web:5173"]'
+    ports:
+      - "8000:80"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./DriverScore_backend-main:/app
+    networks:
+      - driverscore-network
+
+  # Frontend React avec serveur de dev
+  web:
+    build:
+      context: ./DriverScore_frontend-main
+      dockerfile: Dockerfile.dev
+    container_name: driverscore-web-dev
+    environment:
+      VITE_API_URL: http://localhost:8000
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
+    volumes:
+      - ./DriverScore_frontend-main:/app
+      - /app/node_modules  # Volume anonyme pour node_modules
+    networks:
+      - driverscore-network
+
+volumes:
+  postgres_data:
+
+networks:
+  driverscore-network:
+    driver: bridge

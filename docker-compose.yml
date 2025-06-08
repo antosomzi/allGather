@@ -1,0 +1,74 @@
+services:
+  # PostgreSQL with PostGIS
+  db:
+    image: postgis/postgis:14-3.4
+    container_name: driverscore-postgres
+    environment:
+      POSTGRES_DB: gpu_user
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - driverscore-network
+
+  # Backend FastAPI
+  api:
+    build:
+      context: ./DriverScore_backend-main
+      dockerfile: Dockerfile
+      args:
+        INSTALL_DEV: false
+    container_name: driverscore-api
+    environment:
+      SQLALCHEMY_DATABASE_URI: postgresql+psycopg2://postgres:postgres@db:5432/gpu_user
+      BACKEND_CORS_ORIGINS: '["http://localhost:3000", "http://localhost:5173", "http://web"]'
+    ports:
+      - "8000:80"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./DriverScore_backend-main:/app
+    networks:
+      - driverscore-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/docs"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend React
+  web:
+    build:
+      context: ./DriverScore_frontend-main
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:8000
+    container_name: driverscore-web
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    networks:
+      - driverscore-network
+
+volumes:
+  postgres_data:
+
+networks:
+  driverscore-network:
+    driver: bridge
+
+# Profiles for selective startup
+# Run only backend: docker-compose --profile backend up
+# Run only frontend: docker-compose --profile frontend up  
+# Run full stack: docker-compose up
