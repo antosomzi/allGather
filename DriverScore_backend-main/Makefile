@@ -59,10 +59,10 @@ setup-db: start-db
 
 
 run:
-	uvicorn driver_score.app:app --reload
+	poetry run uvicorn driver_score.app:app --reload
 
-freeze:
-	pip freeze > requirements/prod.txt
+# freeze:
+# 	pip freeze > requirements/prod.txt
 
 # curl:
 # 	curl -X POST -F "file=@/home/gpu_user/hho48/DriverScore_backend/data/2022_05_25_20_19_06_302.zip" http://127.0.0.1:8000/api/v1/allgather/upload

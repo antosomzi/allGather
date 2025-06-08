@@ -1,7 +1,7 @@
 from sqlalchemy import join, select
 
-from driver_score.db.engine import session_scope
-from driver_score.db.models import Driver, RoadCharacteristic, Run, Score
+from driver_score.core.database import get_db_session
+from driver_score.core.models import Driver, RoadCharacteristic, Run, Score
 
 from .schema import PivotTableByRCRangeSchema, PivotTableByRCTypeSchema
 
@@ -11,7 +11,7 @@ class SummaryService:
         pass
 
     async def get_summary_by_RC_range(self) -> list[PivotTableByRCRangeSchema]:
-        with session_scope() as session:
+        with get_db_session() as session:
             result = session.execute(
                 select(
                     Driver.name,

@@ -1,7 +1,7 @@
 import numpy as np
 
-from driver_score.db.engine import session_scope
-from driver_score.db.models import Score
+from driver_score.core.database import get_db_session
+from driver_score.core.models import Score
 
 from ..allgather.schemas import GpsSampleSchema, ImuSampleSchema
 from .schemas import DriverScoreInSchema
@@ -103,7 +103,7 @@ class DriverScoreModelService:
         return Score
 
     async def persist_scores_into_db(self, run_id: str, scores: list[DriverScoreInSchema]) -> None:
-        with session_scope() as session:
+        with get_db_session() as session:
             for score in scores:
                 score = Score(run_id=run_id, timestamp=score.timestamp, score=score.score)
                 session.add(score)

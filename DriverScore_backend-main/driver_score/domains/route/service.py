@@ -7,8 +7,8 @@ import numpy as np
 from pydantic_geojson import LineStringModel
 from shapely.geometry import LineString, Point
 
-from driver_score.db.engine import db_engine, session_scope
-from driver_score.db.models import CurveInventory, DissolvedRoute
+from driver_score.core.database import db_engine, get_db_session
+from driver_score.core.models import CurveInventory, DissolvedRoute
 from driver_score.settings import settings
 
 from .curve.service import CurveService, RouteSpline
@@ -85,13 +85,13 @@ class RouteService:
         pass
 
     async def get_route(self, route_id: str) -> LineString:
-        with session_scope() as session:
+        with get_db_session() as session:
             route = session.query(DissolvedRoute).filter(DissolvedRoute.dissolved_id == route_id).first()
             return geoalchemy2.shape.to_shape(route.geometry)
 
     # TODO: Make return consistent by always using pydantic schemas instead
     async def get_curves(self, route_id: str) -> gpd.GeoDataFrame:
-        with session_scope() as session:
+        with get_db_session() as session:
             curves = session.query(CurveInventory).filter(CurveInventory.dissolved_id == route_id).all()
             gdf = gpd.GeoDataFrame(
                 [{c.key: getattr(curve, c.key) for c in curve.__table__.columns} for curve in curves]

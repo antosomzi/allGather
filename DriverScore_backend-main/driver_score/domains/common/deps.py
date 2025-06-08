@@ -3,6 +3,6 @@
 # from fastapi import Depends
 # from sqlalchemy.orm import Session
 
-# from driver_score.db.engine import session_scope
+# from driver_score.core.database import get_db_session
 
-# SessionDep = Annotated[Session, Depends(session_scope)]
+# SessionDep = Annotated[Session, Depends(get_db_session)]

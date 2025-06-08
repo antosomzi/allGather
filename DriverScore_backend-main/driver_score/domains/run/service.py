@@ -12,8 +12,8 @@ from scipy.interpolate import interp1d
 from shapely import LineString, Point
 from sqlalchemy import func, select
 
-from driver_score.db.engine import session_scope
-from driver_score.db.models import GpsSample, ImuSample, RoadCharacteristic, Run, Score
+from driver_score.core.database import get_db_session
+from driver_score.core.models import GpsSample, ImuSample, RoadCharacteristic, Run, Score
 from driver_score.domains.route.curve.service import RouteSpline
 
 from ..allgather.schemas import GpsSampleSchema, ImuSampleSchema
@@ -28,12 +28,12 @@ class RunService:
 
     @staticmethod
     async def get_runs() -> list[RunSchema]:
-        with session_scope() as session:
+        with get_db_session() as session:
             runs = session.query(Run).all()
             return [RunSchema.model_validate(run) for run in runs]
 
     async def get_run(self) -> RunSchema:
-        with session_scope() as session:
+        with get_db_session() as session:
             filters = [
                 Run.run_id == self.run_id if self.run_id is not None else True,
                 # TODO: self.run_id is None or Run.run_id == self.run_id
@@ -52,12 +52,12 @@ class RunService:
         Returns:
             None
         """
-        with session_scope() as session:
+        with get_db_session() as session:
             run = Run(driver_id=driver_id, run_id=self.run_id, start_time=start_time)
             session.add(run)
 
     async def get_gps_samples(self) -> list[GpsSampleSchema]:
-        with session_scope() as session:
+        with get_db_session() as session:
             gps_points = session.query(GpsSample).filter(GpsSample.run_id == self.run_id).all()
             gps_points = [GpsSampleSchema.model_validate(gps_point) for gps_point in gps_points]
             return gps_points
@@ -74,7 +74,7 @@ class RunService:
         return gps_points_by_direction
 
     async def get_imu_samples(self) -> list[ImuSampleSchema]:
-        with session_scope() as session:
+        with get_db_session() as session:
             # Get imu data and gps data first
             imu_points = session.query(ImuSample).filter(ImuSample.run_id == self.run_id).all()
             imu_points = [ImuSampleSchema.model_validate(imu_point).model_dump() for imu_point in imu_points]
@@ -169,7 +169,7 @@ class RunService:
         return {"increasing": increasing[1], "decreasing": decreasing[1]}
 
     async def get_scores(self) -> DriverScoreOutSchema:
-        with session_scope() as session:
+        with get_db_session() as session:
             query = (
                 select(
                     GpsSample.timestamp,
@@ -324,7 +324,7 @@ class RunService:
 
     async def persist_run_based_RCs_to_db(self):
         """Persist run-based RCs to the road_chracteristics table."""
-        with session_scope() as session:
+        with get_db_session() as session:
             run_based_RCs = await self.get_run_based_RCs()
             session.add_all([RoadCharacteristic(**run_based_RC.model_dump()) for run_based_RC in run_based_RCs])
 

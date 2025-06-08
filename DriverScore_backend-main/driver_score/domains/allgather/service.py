@@ -12,8 +12,8 @@ import pandas as pd
 from fastapi import HTTPException, UploadFile, status
 from scipy.spatial.transform import Rotation
 
-from driver_score.db.engine import db_engine, session_scope
-from driver_score.db.models import CollectedDataFile, GpsSample, ImuSample, UploadLog
+from driver_score.core.database import db_engine, get_db_session
+from driver_score.core.models import CollectedDataFile, GpsSample, ImuSample, UploadLog
 from driver_score.settings import settings
 
 from ..driver.service import DriverService
@@ -83,7 +83,7 @@ class AllGatherService:
         # TODO: For example, we can rollback everything if a file is not uploaded successfully.
         await run_service.persist_run_to_db(driver_id=user_id, start_time=upload_file_created_on)
 
-        with session_scope() as session:
+        with get_db_session() as session:
             db_upload_log = UploadLog(
                 uploaded_by=user_id,
                 uploaded_on=datetime.now(),
@@ -94,7 +94,7 @@ class AllGatherService:
             session.add(db_upload_log)
 
         if self._check_duplicate_upload(user_id, filename, upload_file_created_on):
-            with session_scope() as session:
+            with get_db_session() as session:
                 db_upload_log = UploadLog(
                     uploaded_by=user_id,
                     uploaded_on=datetime.now(),
@@ -108,7 +108,7 @@ class AllGatherService:
 
         # TODO: Update other fields of the Collected_Data_File table
         file_id = None
-        with session_scope() as session:
+        with get_db_session() as session:
             db_collected_file = CollectedDataFile(
                 # device_type=1,  # 1 for smartphone device
                 file_name=filename,
@@ -201,7 +201,7 @@ class AllGatherService:
     def _check_duplicate_upload(self, user_id: str, filename: str, timestamp: datetime) -> bool:
         """Function for getting the created date of an uploaded file from the first"""
         return False
-        with session_scope() as session:
+        with get_db_session() as session:
             results = (
                 session.query(CollectedDataFile)
                 .filter(
@@ -234,7 +234,7 @@ class AllGatherService:
                 len_data_folder = len(list(data_folder.iterdir()))
 
                 if len_data_folder != 1:
-                    with session_scope() as session:
+                    with get_db_session() as session:
                         log_message = f"{data_folder} must only have EXACTLY ONE .csv file!"
                         db_upload_log = UploadLog(
                             uploaded_by=user_id,
@@ -346,7 +346,7 @@ class AllGatherService:
         """
         if len(df["timestamp"]) - len(df["timestamp"].drop_duplicates()) >= len(df["timestamp"]) * 0.5:
             log_message = "Acceleration/IMU data or location/GPS data is not present in zip file"
-            # with session_scope() as session:
+            # with get_db_session() as session:
             #     # TODO: Update later. Probably will need to store user_id and file_name as attributes for log
             #     db_upload_log = UploadLog(
             #         uploaded_by=user_id,

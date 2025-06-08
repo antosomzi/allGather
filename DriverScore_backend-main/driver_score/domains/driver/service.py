@@ -1,5 +1,5 @@
-from driver_score.db.engine import session_scope
-from driver_score.db.models import Driver, Run
+from driver_score.core.database import get_db_session
+from driver_score.core.models import Driver, Run
 
 from ..run.schemas import RunSchema
 
@@ -24,7 +24,7 @@ class DriverService:
             >>> driver_service = DriverService(12345)
             >>> await driver_service.persist_driver_to_db()
         """
-        with session_scope() as session:
+        with get_db_session() as session:
             driver = Driver(driver_id=self.driver_id)
             session.add(driver)
 
@@ -43,12 +43,12 @@ class DriverService:
             >>> print(driver.name)
             John Doe
         """
-        with session_scope() as session:
+        with get_db_session() as session:
             driver = session.query(Driver).filter(Driver.driver_id == self.driver_id).first()
             return driver
 
     async def get_runs(self) -> list[RunSchema]:
-        with session_scope() as session:
+        with get_db_session() as session:
             filters = [Run.driver_id == self.driver_id]
             runs = session.query(Run).filter(*filters).all()
 

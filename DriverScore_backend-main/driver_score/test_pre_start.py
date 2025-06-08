@@ -3,7 +3,7 @@ import logging
 from sqlalchemy import text
 from tenacity import after_log, before_log, retry, stop_after_attempt, wait_fixed
 
-from driver_score.db.engine import session_scope
+from driver_score.core.database import get_db_session
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ wait_seconds = 1
 def init() -> None:
     try:
         # Try to create session to check if DB is awake
-        with session_scope() as session:
+        with get_db_session() as session:
             session.execute(text("SELECT version();"))
     except Exception as e:
         logger.error(e)
